@@ -1,4 +1,4 @@
-FROM  python:3.8.13-bullseye
+FROM python:3.11.4-slim-buster
 
 ENV PYTHONUNBUFFERED=1
 
@@ -9,8 +9,6 @@ WORKDIR /oneboard_backend
 COPY . .
 
 COPY ./requirements.txt .
-
-
 RUN pip install -r requirements.txt
 COPY ./entrypoint.sh /entrypoint.sh
 RUN ls -a
