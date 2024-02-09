@@ -49,7 +49,7 @@ INSTALLED_APPS = [
     "user",
     "engineering",
     "corsheaders",
-    "admin"
+    "registeradmin"
 ]
 
 MIDDLEWARE = [
