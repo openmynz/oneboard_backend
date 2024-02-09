@@ -3,12 +3,12 @@ from .models import Account,Project,User_Project_Mapping
 from rest_framework import viewsets
 from .serializers import AccountSerializer,ProjectSerializer,User_Project_MappingSerializer
 
-# Create your views here.
+
 class AccountViewSet(viewsets.ModelViewSet):
     queryset = Account.objects.all()
     serializer_class = AccountSerializer
 class ProjectViewSet(viewsets.ModelViewSet):
-    queryset = Project.objects.all()
+    queryset = Project.objects.select_related('account_id').all()
     serializer_class = ProjectSerializer
 class UserProjectMappingViewSet(viewsets.ModelViewSet):
     queryset = User_Project_Mapping.objects.all()
