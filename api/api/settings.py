@@ -48,7 +48,8 @@ INSTALLED_APPS = [
     "drf_yasg",
     "user",
     "engineering",
-    "corsheaders"
+    "corsheaders",
+    "admin"
 ]
 
 MIDDLEWARE = [
