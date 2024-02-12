@@ -8,7 +8,7 @@ class ProjectSerializer(serializers.ModelSerializer):
     account_name = serializers.CharField(source='account_id.account_name', read_only=True)
     class Meta:
         model = Project
-        fields = ['project_id', 'project_name', 'account_name']
+        fields = ['project_id', 'project_name','account_id', 'account_name']
 class User_Project_MappingSerializer(serializers.ModelSerializer):
     class Meta:
         model=User_Project_Mapping
