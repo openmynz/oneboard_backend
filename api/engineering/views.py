@@ -21,7 +21,6 @@ class ProjectViewSet(viewsets.ModelViewSet):
         except Account.DoesNotExist:
             return Response({'error': 'Invalid account_id'}, status=status.HTTP_400_BAD_REQUEST)
 
-        request.data['account_id_id'] = account.id  # Replace account_id with the corresponding Account instance's id
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
