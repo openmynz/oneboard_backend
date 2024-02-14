@@ -5,10 +5,10 @@ from .serializers import AccountSerializer,ProjectSerializer,User_Project_Mappin
 from rest_framework.response import Response
 
 class AccountViewSet(viewsets.ModelViewSet):
-    queryset = Account.objects.all()
+    queryset = Account.objects.all().order_by('account_id')
     serializer_class = AccountSerializer
 class ProjectViewSet(viewsets.ModelViewSet):
-    queryset = Project.objects.all()
+    queryset = Project.objects.all().order_by('project_id')
     serializer_class = ProjectSerializer
 
     def create(self, request, *args, **kwargs):
