@@ -15,4 +15,3 @@ class User_Project_MappingSerializer(serializers.ModelSerializer):
     class Meta:
         model=User_Project_Mapping
         fields = '__all__'
-
