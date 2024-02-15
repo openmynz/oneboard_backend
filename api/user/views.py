@@ -13,8 +13,8 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from rest_framework_simplejwt.authentication import JWTAuthentication
-from .serializers import UserSerializer
-
+from .serializers import UserSerializer,LdapUsersSerializer,EmployeeSerializer
+from .models import Employee,LdapUsers
 
 class UserViewSet(ModelViewSet):
     authentication_classes = [
@@ -268,3 +268,10 @@ class UserViewSet(ModelViewSet):
                 {"detail": "User not authenticated"},
                 status=status.HTTP_401_UNAUTHORIZED,
             )
+class LdapUsersViewSet(ModelViewSet):
+    queryset = LdapUsers.objects.all()
+    serializer_class = LdapUsersSerializer
+
+class EmployeeViewSet(ModelViewSet):
+    queryset = Employee.objects.all()
+    serializer_class = EmployeeSerializer
