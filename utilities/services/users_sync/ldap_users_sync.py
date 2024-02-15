@@ -1,8 +1,10 @@
 import argparse
 import logging
+import requests
 from ldap3 import Server, Connection, ALL, ALL_ATTRIBUTES, SUBTREE
 from retrying import retry
 from constants import *
+
 
 logging.basicConfig(level=logging.INFO)
 
@@ -67,7 +69,7 @@ class LDAPService:
         return result
 
 
-class SyncUsers:
+class SyncUsersData:
     def __init__(self, host, port, username, password, users_endpoint) -> None:
         self.api_ip = host
         self.port = port
@@ -76,13 +78,60 @@ class SyncUsers:
         self.users_endpoint = users_endpoint
 
     def get_available_users_from_db(self):
+        print(self.users_endpoint)
+        users = requests.get(
+            url=self.users_endpoint, auth=(self.username, self.password)
+        )
+        return users.json()
+
+    def create_user(self, data):
+        try:
+            status = requests.post(
+                url=self.users_endpoint, data=data, auth=(self.username, self.password)
+            )
+            if status.response_code == 201:
+                return True
+            else:
+                return False
+        except Exception as e:
+            print(f"Exception occured is : {e}")
+        else:
+            logging.info("User create successfully")
+        finally:
+            pass
+
+    def delete_user(self, id):
         pass
 
-    def create_user(self):
-        pass
+    def sync(self, ldap_users_info: dict):
+        # Fetch users from DB
+        db_users = self.get_available_users_from_db()
+        db_distinguished_names = []
+        for db_user in db_users:
+            db_distinguished_names.append(db_user["distinguished_name"])
+        db_distinguished_names = set(db_distinguished_names)
 
-    def delete_user(self):
-        pass
+        ldap_distinguished_names = []
+        for ldap_user in ldap_users_info:
+            ldap_distinguished_names.append(ldap_user["dn"])
+            if ldap_user["dn"] in db_distinguished_names:
+                pass
+            else:
+                data = {}
+                data["distinguished_name"] = ldap_user["dn"]
+                data["first_name"] = ldap_user["fname"]
+                data["last_name"] = ldap_user["lname"]
+                data["common_name"] = ldap_user["cn"]
+                data["account_name"] = ldap_user["accountname"]
+                self.create_user(data=data)
+        ldap_distinguished_names = set(ldap_distinguished_names)
+
+        for db_user in db_users:
+            if db_users["distinguished_name"] in ldap_distinguished_names:
+                pass
+            else:
+                # delete the users that are present in db but not present in ldap
+                pass
 
 
 def main():
@@ -113,7 +162,7 @@ def main():
 
     parser.add_argument(
         "--api-users-endpoint",
-        default=API_DEFAULT_USERSENDPOINT,
+        default=API_DEFAULT_LDAPUSERS_ENDPOINT,
         help="Users end point",
     )
     args = parser.parse_args()
@@ -123,12 +172,17 @@ def main():
         args.ldap_host, args.ldap_port, args.ldap_username, args.ldap_password
     )
 
+    api_object = SyncUsersData(
+        host=args.api_host,
+        port=args.api_port,
+        username=args.api_username,
+        password=args.api_password,
+        users_endpoint=args.api_users_endpoint,
+    )
     try:
         # Fetch users from LDAP
-        users = ldap_service.fetch_users_from_ldap()
-        print(users)
-
-        db_users = []
+        ldap_users = ldap_service.fetch_users_from_ldap()
+        api_object.sync(ldap_users_info=ldap_users)
 
         logging.info("Sync completed successfully!")
     except Exception as e:
