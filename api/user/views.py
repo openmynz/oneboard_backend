@@ -281,11 +281,10 @@ class CustomEmployeeViewSet(ModelViewSet):
 
     def list(self, request, *args, **kwargs):
         ldap_users = self.get_queryset()
-        employee = employee.objects.all()
         data = []
         for ldap_user in ldap_users:
             try:
-                # employee = ldap_user.employee
+                employee = ldap_user.employee  # Assuming there is a OneToOneField from LdapUsers to Employee
                 data.append({
                     'full_name': ldap_user.common_name,
                     'email_id': employee.email_id,
@@ -298,6 +297,7 @@ class CustomEmployeeViewSet(ModelViewSet):
                     'employee_id': None
                 })
         return Response(data, status=status.HTTP_200_OK)
+
 
 
     
