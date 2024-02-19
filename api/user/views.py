@@ -276,20 +276,26 @@ class EmployeeViewSet(ModelViewSet):
     queryset = Employee.objects.all()
     serializer_class = EmployeeSerializer
 class CustomEmployeeViewSet(ModelViewSet):
-    queryset = Employee.objects.all()
     serializer_class = EmployeeSerializer
 
     def list(self, request, *args, **kwargs):
-        employees = self.get_queryset()
+        ldap_users = LdapUsers.objects.all()
         data = []
-        for employee in employees:
-            
-            ldap_user = LdapUsers.objects.filter(id=employee.ldap_user.id).first()
-
-            full_name = ldap_user.common_name if ldap_user else None
-            data.append({
-                'full_name': full_name,
-                'email_id': employee.email_id,
-                'employee_id': employee.employee_id
-            })
+        for ldap_user in ldap_users:
+            try:
+                employee = ldap_user.employee
+                data.append({
+                    'full_name': ldap_user.common_name,
+                    'email_id': employee.email_id,
+                    'employee_id': employee.employee_id
+                })
+            except Employee.DoesNotExist:
+                data.append({
+                    'full_name': ldap_user.common_name,
+                    'email_id': None,
+                    'employee_id': None
+                })
         return Response(data, status=status.HTTP_200_OK)
+
+
+    
