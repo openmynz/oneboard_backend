@@ -276,14 +276,16 @@ class EmployeeViewSet(ModelViewSet):
     queryset = Employee.objects.all()
     serializer_class = EmployeeSerializer
 class CustomEmployeeViewSet(ModelViewSet):
+    queryset = LdapUsers.objects.all()
     serializer_class = EmployeeSerializer
 
     def list(self, request, *args, **kwargs):
-        ldap_users = LdapUsers.objects.all()
+        ldap_users = self.get_queryset()
+        employee = employee.objects.all()
         data = []
         for ldap_user in ldap_users:
             try:
-                employee = ldap_user.employee
+                # employee = ldap_user.employee
                 data.append({
                     'full_name': ldap_user.common_name,
                     'email_id': employee.email_id,
