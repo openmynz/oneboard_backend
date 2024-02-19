@@ -15,7 +15,7 @@ from django.contrib.auth.models import User
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from .serializers import UserSerializer,LdapUsersSerializer,EmployeeSerializer
 from .models import Employee,LdapUsers
-
+from django.db.models import F
 class UserViewSet(ModelViewSet):
     authentication_classes = [
         JWTAuthentication,
@@ -276,28 +276,11 @@ class EmployeeViewSet(ModelViewSet):
     queryset = Employee.objects.all()
     serializer_class = EmployeeSerializer
 class CustomEmployeeViewSet(ModelViewSet):
-    queryset = LdapUsers.objects.all()
+  
+    queryset = Employee.objects.annotate(
+        common_name=F("ldap_user__common_name")
+    ).values("common_name", "employee_id", "email_id")
     serializer_class = EmployeeSerializer
-
-    def list(self, request, *args, **kwargs):
-        ldap_users = self.get_queryset()
-        data = []
-        for ldap_user in ldap_users:
-            try:
-                employee = ldap_user.employee  # Assuming there is a OneToOneField from LdapUsers to Employee
-                data.append({
-                    'full_name': ldap_user.common_name,
-                    'email_id': employee.email_id,
-                    'employee_id': employee.employee_id
-                })
-            except Employee.DoesNotExist:
-                data.append({
-                    'full_name': ldap_user.common_name,
-                    'email_id': None,
-                    'employee_id': None
-                })
-        return Response(data, status=status.HTTP_200_OK)
-
 
 
     
