@@ -276,11 +276,22 @@ class EmployeeViewSet(ModelViewSet):
     queryset = Employee.objects.all()
     serializer_class = EmployeeSerializer
 class CustomEmployeeViewSet(ModelViewSet):
-  
-    queryset = Employee.objects.annotate(
-        common_name=F("ldap_user__common_name")
-    ).values("common_name", "employee_id", "email_id")
+    queryset = Employee.objects.all()
     serializer_class = EmployeeSerializer
+    def list(self, request, *args, **kwargs):
+        employees = self.get_queryset()
+        data = []
+        for employee in employees:
+            ldap_user = LdapUsers.objects.filter(employee__employee_id=employee.employee_id).first()
 
+            ldap_user = LdapUsers.objects.filter(id=employee.ldap_user.id).first()
+
+            full_name = ldap_user.common_name if ldap_user else None
+            data.append({
+                'full_name': full_name,
+                'email_id': employee.email_id,
+                'employee_id': employee.employee_id
+            })
+        return Response(data, status=status.HTTP_200_OK)
 
     
