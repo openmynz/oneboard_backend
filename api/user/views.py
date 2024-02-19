@@ -283,7 +283,9 @@ class CustomEmployeeViewSet(ModelViewSet):
         employees = self.get_queryset()
         data = []
         for employee in employees:
-            ldap_user = LdapUsers.objects.filter(employee__employee_id=employee.employee_id).first()
+            
+            ldap_user = LdapUsers.objects.filter(id=employee.ldap_user.id).first()
+
             full_name = ldap_user.common_name if ldap_user else None
             data.append({
                 'full_name': full_name,
