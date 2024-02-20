@@ -13,9 +13,9 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from rest_framework_simplejwt.authentication import JWTAuthentication
-from .serializers import UserSerializer
-
-
+from .serializers import UserSerializer,LdapUsersSerializer,EmployeeSerializer
+from .models import Employee,LdapUsers
+from django.db.models import F
 class UserViewSet(ModelViewSet):
     authentication_classes = [
         JWTAuthentication,
@@ -268,3 +268,29 @@ class UserViewSet(ModelViewSet):
                 {"detail": "User not authenticated"},
                 status=status.HTTP_401_UNAUTHORIZED,
             )
+class LdapUsersViewSet(ModelViewSet):
+    queryset = LdapUsers.objects.all()
+    serializer_class = LdapUsersSerializer
+
+class EmployeeViewSet(ModelViewSet):
+    queryset = Employee.objects.all()
+    serializer_class = EmployeeSerializer
+class CustomEmployeeViewSet(ModelViewSet):
+    queryset = Employee.objects.all()
+    serializer_class = EmployeeSerializer
+
+    def list(self, request, *args, **kwargs):
+        employees = self.get_queryset()
+        data = []
+        for employee in employees:
+            ldap_user = LdapUsers.objects.filter(id=employee.ldap_user.id).first()
+
+            full_name = ldap_user.common_name if ldap_user else None
+            data.append({
+                'full_name': full_name,
+                'email_id': employee.email_id,
+                'employee_id': employee.employee_id
+            })
+        return Response(data, status=status.HTTP_200_OK)
+
+    
