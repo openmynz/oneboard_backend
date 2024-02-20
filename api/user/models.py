@@ -8,7 +8,7 @@ class LdapUsers(models.Model):
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100, blank=True)
     common_name = models.CharField(max_length=255)
-    account_name = models.CharField(max_length=100,db_index=True)
+    account_name = models.CharField(max_length=100, db_index=True)
 
 
 class Employee(models.Model):
@@ -34,19 +34,19 @@ class Employee(models.Model):
         # Add more roles as necessary
     )
 
-    employee_id = models.PositiveBigIntegerField(unique=True, db_index=True)
-    joining_date = models.DateField()
+    employee_id = models.PositiveBigIntegerField(unique=True, db_index=True, null=True)
+    joining_date = models.DateField(null=True)
     ldap_user = models.OneToOneField(
         "LdapUsers", on_delete=models.CASCADE, related_name="ldap_user"
     )
     reports_to = models.ForeignKey(
         "self", on_delete=models.CASCADE, null=True, blank=True
     )
-    contact_number = models.CharField(max_length=15)
-    emergency_contact_name = models.CharField(max_length=100)
-    emergency_contact_number = models.CharField(max_length=15)
-    email_id = models.CharField(unique=True, max_length=100, db_index=True)
-    role = models.CharField(max_length=20, choices=ROLE_CHOICES)
+    contact_number = models.CharField(max_length=15, null=True)
+    emergency_contact_name = models.CharField(max_length=100, null=True)
+    emergency_contact_number = models.CharField(max_length=15, null=True)
+    email_id = models.CharField(unique=True, max_length=100, db_index=True, null=True)
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES, blank=True)
     blood_group = models.CharField(max_length=3, blank=True, choices=BLOOD_GROUPS)
     profile_photo = models.ImageField(
         upload_to="profile_photos/", null=True, blank=True

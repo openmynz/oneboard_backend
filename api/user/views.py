@@ -1,6 +1,7 @@
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
+from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework import status
 from rest_framework.authentication import (
@@ -10,12 +11,19 @@ from rest_framework.authentication import (
 )
 from rest_framework.authtoken.models import Token
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.authentication import JWTAuthentication
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
-from rest_framework_simplejwt.authentication import JWTAuthentication
-from .serializers import UserSerializer,LdapUsersSerializer,EmployeeSerializer
-from .models import Employee,LdapUsers
-from django.db.models import F
+
+from .serializers import (
+    UserSerializer,
+    LdapUsersSerializer,
+    EmployeeSerializer,
+    LdapUserEmployeeSerializer,
+)
+from .models import Employee, LdapUsers
+
+
 class UserViewSet(ModelViewSet):
     authentication_classes = [
         JWTAuthentication,
@@ -268,29 +276,76 @@ class UserViewSet(ModelViewSet):
                 {"detail": "User not authenticated"},
                 status=status.HTTP_401_UNAUTHORIZED,
             )
+
+
 class LdapUsersViewSet(ModelViewSet):
     queryset = LdapUsers.objects.all()
     serializer_class = LdapUsersSerializer
 
+
 class EmployeeViewSet(ModelViewSet):
     queryset = Employee.objects.all()
     serializer_class = EmployeeSerializer
-class CustomEmployeeViewSet(ModelViewSet):
-    queryset = Employee.objects.all()
-    serializer_class = EmployeeSerializer
 
-    def list(self, request, *args, **kwargs):
-        employees = self.get_queryset()
-        data = []
-        for employee in employees:
-            ldap_user = LdapUsers.objects.filter(id=employee.ldap_user.id).first()
 
-            full_name = ldap_user.common_name if ldap_user else None
-            data.append({
-                'full_name': full_name,
-                'email_id': employee.email_id,
-                'employee_id': employee.employee_id
-            })
-        return Response(data, status=status.HTTP_200_OK)
+class LdapUserEmployeeMappingAPIView(APIView):
+    """
+    API endpoint to retrieve LDAP user details along with associated employee details.
+    """
 
-    
+    # Allowing GET and OPTIONS requests
+    http_method_names = ["get", "options"]
+
+    def get(self, request):
+        """
+        Retrieve LDAP user details along with associated employee details.
+
+        Returns a JSON response with LDAP user and employee data.
+        """
+        try:
+            # Retrieve all LDAP users
+            ldap_users = LdapUsers.objects.all()
+
+            # Create a dictionary to store LDAP user data with employee IDs as keys
+            employee_dict = {
+                employee.ldap_user_id: employee for employee in Employee.objects.all()
+            }
+
+            # List to store the final result
+            result = []
+
+            # Iterate through LDAP users and populate all columns from the database
+            for ldap_user in ldap_users:
+                employee = employee_dict.get(ldap_user.id)
+                if employee:
+                    # If employee exists, add its data
+                    serialized_data = LdapUserEmployeeSerializer(
+                        {
+                            "ldap_user_id": ldap_user.id,
+                            "employee_table_id": employee.id,
+                            "common_name": ldap_user.common_name,
+                            "account_name": ldap_user.account_name,
+                            "employee_id": employee.employee_id,
+                            "email_id": employee.email_id,
+                        }
+                    ).data
+                else:
+                    # If employee doesn't exist, add empty values
+                    serialized_data = LdapUserEmployeeSerializer(
+                        {
+                            "ldap_user_id": ldap_user.id,
+                            "employee_table_id": None,
+                            "common_name": ldap_user.common_name,
+                            "account_name": ldap_user.account_name,
+                            "employee_id": None,
+                            "email_id": None,
+                        }
+                    ).data
+                result.append(serialized_data)
+
+            # Return the response
+            return Response(result, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response(
+                {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
