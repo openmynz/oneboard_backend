@@ -39,4 +39,4 @@ class LdapUserEmployeeSerializer(serializers.Serializer):
     common_name = serializers.CharField()
     account_name = serializers.CharField()
     employee_id = serializers.IntegerField(allow_null=True)
-    email = serializers.EmailField(allow_blank=True, allow_null=True)
+    email_id = serializers.EmailField(allow_blank=True, allow_null=True)

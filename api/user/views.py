@@ -308,7 +308,7 @@ class LdapUserEmployeeMappingAPIView(APIView):
 
             # Create a dictionary to store LDAP user data with employee IDs as keys
             employee_dict = {
-                employee.ldap_user: employee for employee in Employee.objects.all()
+                employee.ldap_user_id: employee for employee in Employee.objects.all()
             }
 
             # List to store the final result
